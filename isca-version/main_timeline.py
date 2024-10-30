@@ -30,7 +30,7 @@ def step(val):
         sat.step(time,g.ground_stations)
     task_amount_trace.append(len(g.tasks)-100)
 
-for i in range(60*24+1):
+for i in range(60*24*7+1):
     step(i+1)
 k = 0
 
@@ -96,10 +96,29 @@ get_pcolor(ax3,pcolor_matrix3,"Visible Trace")
 
 get_pcolor(ax4,pcolor_matrix4,"Task Amount Trace")
 
+pcolor_matrix5 = None
 
+# for sat in satellites:
+#     print(f"Battery Trace for satellite {sat.name}")
+#     t,time = sat.energy_system.battery_exp()
+#     if not isinstance(pcolor_matrix5, np.ndarray):
+#         pcolor_matrix5 = np.empty((0,len(time)))
+#     battery_trace = np.array(t)
+#     print(battery_trace)
+#     pcolor_matrix5 = np.vstack([pcolor_matrix5,battery_trace])
 
-# plt.tight_layout()
-# plt.show()
-for sat in satellites:
-    sat.energy_system.battery_exp()
-    
+# def get_bat_pcolor(ax, matrix, name,t):
+#     c = ax.pcolor(matrix)
+#     # print(len(satellites[0].energy_system.date_trace))
+#     ax.set_title(name)
+#     fig.colorbar(c, ax=ax)
+#     ax.set_xticks(range(len(t))[::x_interval], minor=False)
+#     ax.set_yticks(np.arange(matrix.shape[0]) + 0.5, minor=False)
+
+#     ax.set_xticklabels(t[::x_interval])
+#     ax.set_yticklabels([f'Y{i}' for i in range(matrix.shape[0])])
+
+# get_bat_pcolor(ax5,pcolor_matrix5,"Battery Trace",t)
+
+plt.tight_layout()
+plt.show()

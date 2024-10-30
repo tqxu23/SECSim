@@ -45,6 +45,9 @@ class Satellite:
         self.date_trace : list[float] = []
         self.task_trace : list[float] = []
 
+
+        # rest状态
+        self.rest = False
     
     def get_connectable(self,ground_stations, time):
         self.visible = False
@@ -81,8 +84,8 @@ class Satellite:
         self.tasks.append(task)
         
     def can_accept_task(self) -> bool:
-        return True
-        # return self.energy_system.energy / self.energy_system.storage >= 0.8
+        # return True
+        return self.energy_system.energy / self.energy_system.storage >= 0.8
         # count = 0
         # for t in self.tasks:
         #     if not t.completed:
@@ -91,7 +94,13 @@ class Satellite:
 
     def step_task_communication(self, cur_time):
         if self.energy_system.energy <= 0:
+            self.rest = True
             return self.communication_system.step(False,cur_time,self.visible)
+        if self.rest:
+            if self.energy_system.energy > 0.8*self.energy_system.storage:
+                self.rest = False
+            else:
+                return self.communication_system.step(False,cur_time,self.visible)
         step_size = (cur_time - self.cur_time).total_seconds()
         if self.visible:
             for t in self.tasks:
@@ -102,8 +111,15 @@ class Satellite:
         return self.communication_system.step(False,cur_time,self.visible)
 
     def step_task_inference(self, cur_time):
-        if self.energy_system.energy < 0:
+        if self.energy_system.energy <= 0:
+            self.rest = True
             return self.inference_system.step(False,cur_time)
+        if self.rest:
+            if self.energy_system.energy > 0.8*self.energy_system.storage:
+                self.rest = False
+            else:
+                return self.inference_system.step(False,cur_time)
+
         step_size = (cur_time - self.cur_time).total_seconds()
         for t in self.tasks:
             if (not t.completed):
@@ -116,8 +132,15 @@ class Satellite:
 
 
     def step_task_sensing(self, cur_time):
-        if self.energy_system.energy < 0:
+        if self.energy_system.energy <= 0:
+            self.rest = True
             return self.sensor_system.step(False,cur_time)
+        if self.rest:
+            if self.energy_system.energy > 0.8*self.energy_system.storage:
+                self.rest = False
+            else:
+                return self.sensor_system.step(False,cur_time)
+            
         step_size = (cur_time - self.cur_time).total_seconds()
         for t in self.tasks:
             if (not t.completed) and self.get_can_see_target(t.observer,cur_time):

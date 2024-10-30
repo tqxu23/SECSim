@@ -3,14 +3,16 @@ import pybamm
 import numpy as np
 class EnergySystem:
   
-    def __init__(self, start_time, solar_size = 1, storage = 10):
+    def __init__(self, start_time, solar_size = 1, bat_num = 10):
 
         # solar size 单位为平方米
         # energy storage 单位为Wh
         # step size 单位为s
 
+        self.vol_per_bat = 5*0.8
         self.solar_size = solar_size
-        self.storage = storage
+        self.bat_num = bat_num
+        self.storage = bat_num*self.vol_per_bat
         self.energy = self.storage
         self.cur_time = start_time
 
@@ -18,9 +20,12 @@ class EnergySystem:
         # 电池仿真部分
 
         self.model = pybamm.lithium_ion.SPM({"SEI": "ec reaction limited"})
+        # Parameters for an LG M50 cell, from the paper Chen et al.[9] and references therein.
         self.parameter_values = pybamm.ParameterValues("Chen2020")
-        self.parameter_values.update({"SEI kinetic rate constant [m.s-1]": 1e-14})
-        print(self.parameter_values)
+        # self.parameter_values.update({"SEI kinetic rate constant [m.s-1]": 1e-14})
+        # print(self.parameter_values)
+        # print(self.model.variable_names())
+        # assert False
         # self.parameter_values.update({"SEI kinetic rate constant [m.s-1]": 1e-14})
         # add anode potential as a variable
         # we use the potential at the separator interface since that is the minimum potential
@@ -65,7 +70,7 @@ class EnergySystem:
         self.trace(date=cur_time, eclipsed= eclipesd, energy= self.energy)
     
     def battery_step(self, cur_power,step_size):
-        cur_power = cur_power 
+        cur_power = cur_power / self.bat_num
         direction = "Charge"
         target_power = cur_power
         if cur_power<0:
@@ -81,11 +86,16 @@ class EnergySystem:
         step = pybamm.Experiment([tuple(self.exp_expr)])
         self.sim = pybamm.Simulation(
             self.model, experiment=step, parameter_values=self.parameter_values
-        ).solve()
-
-        pybamm.dynamic_plot(self.sim, ["Current [A]", "Voltage [V]",'Total lithium capacity [A.h]'])
-        # self.sim.plot()
+        ).solve(solver=self.solver)
         # pybamm.plot_summary_variables(self.sim)
+
+        # t = self.sim["Discharge capacity [A.h]"].entries
+        # t = self.sim["Power [W]"].entries
+        # https://docs.pybamm.org/en/v23.5_a/source/examples/notebooks/getting_started/tutorial-3-basic-plotting.html
+        t = self.sim["Total lithium capacity [A.h]"].entries
+        time = self.sim['Time [s]'].entries
+        return t,time
+        # self.sim.plot()
 
 
 

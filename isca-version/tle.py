@@ -18,7 +18,7 @@ def get_sat_from_tle(time, file_name):
             else:
                 assert line.startswith("2"), f"line{i} not start with \'2\'"
                 line2 = line
-                energy = EnergySystem(start_time=time, solar_size= 0.03, storage= 10)
+                energy = EnergySystem(start_time=time, solar_size= 0.03, bat_num= 3)
                 comm = CommunicationSystem(start_time=time,power_cost= 10)
                 infer = InferenceSystem(start_time=time,power_cost= 10)
                 sensor = SensorSystem(start_time=time,power_cost= 10)
